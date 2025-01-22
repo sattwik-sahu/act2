@@ -1,0 +1,32 @@
+[project]
+name = "act2"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "sattwik-sahu", email = "sattwik21@iiserb.ac.in" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "matplotlib>=3.10.0",
+    "numpy>=2.2.2",
+    "pandas>=2.2.3",
+    "torch>=2.5.1",
+    "torchao>=0.8.0",
+    "torchtune>=0.5.0",
+    "torchvision>=0.20.1",
+]
+
+[project.scripts]
+act2 = "act2:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "jupyter>=1.1.1",
+    "pytest>=8.3.4",
+    "ruff>=0.9.2",
+]
