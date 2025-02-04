@@ -21,17 +21,17 @@ class StyleVarModule(torch.nn.Module):
         z_dim (int): Dimension of the style variable, `z`.
         cls_layer (torch.nn.Linear): The layer whose weights represent the
             learnable `[CLS]` token. Dim: `1 -> embed_dim`
-        action_seq_emb_layer (torch.nn.Linear): The layer to embed the
+        action_seq_embedding_layer (torch.nn.Linear): The layer to embed the
             joint action sequence. Dim: `n_joints -> embed_dim`
-        joints_emb_layer (torch.nn.Linear): The layer to embed the joint
+        joints_embedding_layer (torch.nn.Linear): The layer to embed the joint
             observations (angles). Dim: `n_joints -> embed_dim`
         sample_params_layer (torch.nn.Linear): The layer to estimate the
             sample parameters (mean and logvariance) of `z`.
             Dim: `embed_dim -> z_dim`
-        rope (torchtune.modules.RotaryPositionalEmbeddings):
-            The module to add rotary positional embeddings,described in the
-            paper "RoFormer: Enhanced Transformer with Rotary Position
-            Embedding" (Su et al., 2023)[2].
+        action_rope (torchtune.modules.RotaryPositionalEmbeddings):
+            The module to add rotary positional embeddings to the action embeddings,
+            as described in the paper "RoFormer: Enhanced Transformer with Rotary
+            Position Embedding" (Su et al., 2023)[2].
         encoder (torch.nn.TransformerEncoder): The transformer encoder module.
             Dim: `(b, (k + 2), embed_dim) -> (b, (k + 2), embed_dim)`, where
             `b` is the batch size.
@@ -43,10 +43,10 @@ class StyleVarModule(torch.nn.Module):
     n_joints: int
     z_dim: int
     cls_layer: torch.nn.Linear
-    action_seq_emb_layer: torch.nn.Linear
+    action_seq_embedding_layer: torch.nn.Linear
     joints_embedding_layer: torch.nn.Linear
     sample_params_layer: torch.nn.Linear
-    rope: RotaryPositionalEmbeddings
+    action_rope: RotaryPositionalEmbeddings
     encoder: torch.nn.TransformerEncoder
 
     def __init__(
@@ -80,12 +80,12 @@ class StyleVarModule(torch.nn.Module):
         self.z_dim = z_dim
 
         # Initalize the required modules
-        # Linear layers (1-4 in [1])
+        # Linear layers (Linear 1 to 4 in [1])
         self.cls_layer = torch.nn.Linear(in_features=1, out_features=embed_dim)
         self.joints_embbeding_layer = torch.nn.Linear(
             in_features=n_joints, out_features=embed_dim
         )
-        self.action_emb_layer = torch.nn.Linear(
+        self.action_seq_embedding_layer = torch.nn.Linear(
             in_features=n_joints, out_features=embed_dim
         )
         self.sample_params_layer = torch.nn.Linear(
@@ -93,7 +93,7 @@ class StyleVarModule(torch.nn.Module):
         )
 
         # Rotary positional embeddings, from [2]
-        self.rope = RotaryPositionalEmbeddings(dim=embed_dim)
+        self.action_rope = RotaryPositionalEmbeddings(dim=embed_dim)
 
         # Transformer encoder
         encoder_layer = torch.nn.TransformerEncoderLayer(
@@ -157,8 +157,8 @@ class StyleVarModule(torch.nn.Module):
         cls_token: torch.Tensor = self.cls_layer(cls_input)
 
         # Embedding the action sequence and adding rotary positional encodings
-        action_seq_emb: torch.Tensor = self.action_emb_layer(action_seq)
-        rope_action_seq_emb: torch.Tensor = self.rope(
+        action_seq_emb: torch.Tensor = self.action_seq_embedding_layer(action_seq)
+        rope_action_seq_emb: torch.Tensor = self.action_rope(
             action_seq_emb.unsqueeze(0)
         ).squeeze(0)
 
